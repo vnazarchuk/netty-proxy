@@ -35,8 +35,15 @@ public class DelayedProxyTest {
     }
 
     @Test
-    public void testClientConnection() {
-        JedisPool pool = new JedisPool("127.0.0.1", 2000);
+    public void testRedisPort() {
+        JedisPool pool = new JedisPool("127.0.0.1", proxy.serverPort);
+        Jedis jedis = pool.getResource();
+        assertNotNull(jedis);
+    }
+
+    @Test
+    public void testClientPort() {
+        JedisPool pool = new JedisPool("127.0.0.1", proxy.clientPort);
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
