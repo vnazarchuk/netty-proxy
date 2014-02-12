@@ -2,10 +2,10 @@ package com.collective.delayedproxy;
 
 import org.junit.Before;
 import org.junit.Test;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.*;
 
 public class DelayedProxyTest {
 
@@ -15,6 +15,7 @@ public class DelayedProxyTest {
     public void initProxy() {
         proxy = new DelayedProxy(2000, 2001);
     }
+
 
     @Test
     public void testInit() {
@@ -31,6 +32,13 @@ public class DelayedProxyTest {
     @Test
     public void testIsNotRunning() {
         assertFalse(proxy.isRunning);
+    }
+
+    @Test
+    public void testClientConnection() {
+        JedisPool pool = new JedisPool("127.0.0.1", 2000);
+        Jedis jedis = pool.getResource();
+        assertNotNull(jedis);
     }
 
 }
