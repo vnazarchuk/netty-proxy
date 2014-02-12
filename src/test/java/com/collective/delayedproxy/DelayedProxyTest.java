@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 public class DelayedProxyTest {
@@ -25,6 +26,11 @@ public class DelayedProxyTest {
     public void testStartup() {
         proxy.start();
         assertTrue(proxy.isRunning);
+    }
+
+    @Test
+    public void testIsNotRunning() {
+        assertFalse(proxy.isRunning);
     }
 
 }
