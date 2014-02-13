@@ -21,7 +21,7 @@ public class DelayedProxyTest {
     @Test
     public void testInit() {
         assertEquals(2000, proxy.getServerPort());
-        assertEquals(2001, proxy.getClientPort());
+        assertEquals(2001, proxy.getForwardPort());
     }
 
     @Test
@@ -36,15 +36,15 @@ public class DelayedProxyTest {
     }
 
     @Test
-    public void testRedisPort() {
+    public void testClientOnServerPort() {
         JedisPool pool = new JedisPool("127.0.0.1", proxy.getServerPort());
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
 
     @Ignore
-    public void testClientPort() {
-        JedisPool pool = new JedisPool("127.0.0.1", proxy.getClientPort());
+    public void testClientOnForwardPort() {
+        JedisPool pool = new JedisPool("127.0.0.1", proxy.getForwardPort());
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
