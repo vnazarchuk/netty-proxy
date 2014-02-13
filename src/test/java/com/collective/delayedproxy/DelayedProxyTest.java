@@ -1,6 +1,7 @@
 package com.collective.delayedproxy;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -41,12 +42,11 @@ public class DelayedProxyTest {
         assertNotNull(jedis);
     }
 
-//    TODO: Commented out until proxy is implemented
-//    @Test
-//    public void testClientPort() {
-//        JedisPool pool = new JedisPool("127.0.0.1", proxy.getClientPort());
-//        Jedis jedis = pool.getResource();
-//        assertNotNull(jedis);
-//    }
+    @Ignore
+    public void testClientPort() {
+        JedisPool pool = new JedisPool("127.0.0.1", proxy.getClientPort());
+        Jedis jedis = pool.getResource();
+        assertNotNull(jedis);
+    }
 
 }
