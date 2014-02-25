@@ -13,6 +13,10 @@ import static junit.framework.Assert.*;
 
 public class DelayedProxyTest {
 
+    final static int SERVER_PORT = 2000;
+    final static int CLIENT_PORT = 2001;
+    final static String HOST = "127.0.0.1";
+
     DelayedProxy proxy;
     Process redisProcess;
 
@@ -24,7 +28,7 @@ public class DelayedProxyTest {
     @Before
     public void runRedis() {
         try {
-            redisProcess = new ProcessBuilder("redis-server", "--port", "2000").start();
+            redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(SERVER_PORT)).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,8 +42,8 @@ public class DelayedProxyTest {
 
     @Test
     public void testInit() {
-        assertEquals(2000, proxy.getServerPort());
-        assertEquals(2001, proxy.getForwardPort());
+        assertEquals(SERVER_PORT, proxy.getServerPort());
+        assertEquals(CLIENT_PORT, proxy.getForwardPort());
     }
 
     @Test
@@ -55,14 +59,14 @@ public class DelayedProxyTest {
 
     @Test
     public void testClientOnServerPort() {
-        JedisPool pool = new JedisPool("127.0.0.1", proxy.getServerPort());
+        JedisPool pool = new JedisPool(HOST, proxy.getServerPort());
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
 
     @Ignore
     public void testClientOnForwardPort() {
-        JedisPool pool = new JedisPool("127.0.0.1", proxy.getForwardPort());
+        JedisPool pool = new JedisPool(HOST, proxy.getForwardPort());
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
