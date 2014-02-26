@@ -33,7 +33,7 @@ public class DelayedProxyTest {
     public void testClientSocket() {
         ServerSocket socket = null;
         try {
-            socket = new ServerSocket();
+            socket = new ServerSocket(REMOTE_PORT);
             new ProxyClient(REMOTE_HOST, REMOTE_PORT).start();
         } catch (ConnectException e) {
             fail();
