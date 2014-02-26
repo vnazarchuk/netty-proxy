@@ -12,8 +12,8 @@ public class DelayedProxy {
 
     private final int localPort;
     private final int remotePort;
-    private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-    private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
     private Channel channel;
 
     public DelayedProxy(int localPort, int remotePort) {
@@ -30,6 +30,8 @@ public class DelayedProxy {
     }
 
     public DelayedProxy start() {
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
         ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)

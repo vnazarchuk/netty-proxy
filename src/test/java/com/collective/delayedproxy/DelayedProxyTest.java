@@ -52,9 +52,11 @@ public class DelayedProxyTest {
     }
 
     @Test
-    public void testProxyShutdown() {
+    public void testProxyShutdownAndStart() {
         proxy.stop();
         assertFalse(isProxyRunning());
+        proxy.start();
+        assertTrue(isProxyRunning());
     }
 
     @Test
