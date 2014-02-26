@@ -73,7 +73,6 @@ public class RedisTest {
                 localPool.returnResource(localJedis);
             localPool.destroy();
             remotePool.destroy();
-            redisProcess.destroy();
         }
     }
 }
