@@ -10,23 +10,23 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public class DelayedProxy {
 
-    private final int serverPort;
-    private final int forwardPort;
+    private final int localPort;
+    private final int remotePort;
     private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     private final EventLoopGroup workerGroup = new NioEventLoopGroup();
     private Channel channel;
 
-    public DelayedProxy(int serverPort, int forwardPort) {
-        this.serverPort = serverPort;
-        this.forwardPort = forwardPort;
+    public DelayedProxy(int localPort, int remotePort) {
+        this.localPort = localPort;
+        this.remotePort = remotePort;
     }
 
-    public int getServerPort() {
-        return serverPort;
+    public int getLocalPort() {
+        return localPort;
     }
 
-    public int getForwardPort() {
-        return forwardPort;
+    public int getRemotePort() {
+        return remotePort;
     }
 
     public DelayedProxy start() {
@@ -36,7 +36,7 @@ public class DelayedProxy {
 //                    .handler(new LoggingHandler(LogLevel.INFO))
                 .childHandler(new ChannelInboundHandlerAdapter());
 
-        ChannelFuture future = bootstrap.bind(forwardPort).awaitUninterruptibly();
+        ChannelFuture future = bootstrap.bind(localPort).awaitUninterruptibly();
         channel = future.channel();
         return this;
     }
