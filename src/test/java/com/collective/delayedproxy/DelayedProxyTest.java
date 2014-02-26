@@ -8,6 +8,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
+import java.net.Socket;
 
 import static junit.framework.Assert.*;
 
@@ -21,15 +22,20 @@ public class DelayedProxyTest {
     Process redisProcess;
 
     @Before
-    public void initProxy() {
-        proxy = new DelayedProxy(2000, 2001);
+    public void startProxy() {
+        proxy = new DelayedProxy(SERVER_PORT, CLIENT_PORT).start();
+    }
+
+    @After
+    public void stopProxy() {
+        proxy.stop();
     }
 
     @Before
-    public void runRedis() {
+    public void startRedis() {
         try {
             redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(SERVER_PORT)).start();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -41,25 +47,45 @@ public class DelayedProxyTest {
 
 
     @Test
-    public void testInit() {
+    public void testProxyInit() {
         assertEquals(SERVER_PORT, proxy.getServerPort());
         assertEquals(CLIENT_PORT, proxy.getForwardPort());
     }
 
     @Test
-    public void testStartup() {
-        proxy.start();
-        assertTrue(proxy.isRunning);
+    public void testProxyShutdown() {
+        proxy.stop();
+        assertFalse(isProxyRunning());
+
     }
 
     @Test
-    public void testIsNotRunning() {
-        assertFalse(proxy.isRunning);
+    public void testProxyRunning() {
+        assertTrue(isProxyRunning());
+    }
+
+    private boolean isProxyRunning() {
+        boolean isRunning = false;
+        Socket socket = null;
+        try {
+            socket = new Socket(HOST, CLIENT_PORT);
+            isRunning = socket.isConnected();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (socket != null)
+                    socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return isRunning;
     }
 
     @Test
-    public void testClientOnServerPort() {
-        JedisPool pool = new JedisPool(HOST, proxy.getServerPort());
+    public void testRedisRunning() {
+        JedisPool pool = new JedisPool(HOST, SERVER_PORT);
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
@@ -70,5 +96,4 @@ public class DelayedProxyTest {
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
-
 }
