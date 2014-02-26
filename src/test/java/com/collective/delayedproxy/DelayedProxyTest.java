@@ -2,12 +2,11 @@ package com.collective.delayedproxy;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 import static junit.framework.Assert.*;
@@ -19,7 +18,6 @@ public class DelayedProxyTest {
     final static String REMOTE_HOST = "127.0.0.1";
 
     DelayedProxy proxy;
-    Process redisProcess;
 
     @Before
     public void startProxy() {
@@ -31,18 +29,25 @@ public class DelayedProxyTest {
         proxy.stop();
     }
 
-    @Before
-    public void startRedis() {
+    @Test
+    public void testClientSocket() {
+        ServerSocket socket = null;
         try {
-            redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(REMOTE_PORT)).start();
-        } catch (Exception e) {
+            socket = new ServerSocket();
+            new ProxyClient(REMOTE_HOST, REMOTE_PORT).start();
+        } catch (ConnectException e) {
+            fail();
+        } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-    }
-
-    @After
-    public void stopRedis() {
-        redisProcess.destroy();
     }
 
     @Test
@@ -54,17 +59,17 @@ public class DelayedProxyTest {
     @Test
     public void testProxyShutdownAndStart() {
         proxy.stop();
-        assertFalse(isProxyRunning());
+        assertFalse(isSocketConnected());
         proxy.start();
-        assertTrue(isProxyRunning());
+        assertTrue(isSocketConnected());
     }
 
     @Test
     public void testProxyRunning() {
-        assertTrue(isProxyRunning());
+        assertTrue(isSocketConnected());
     }
 
-    private boolean isProxyRunning() {
+    private boolean isSocketConnected() {
         boolean isRunning = false;
         Socket socket = null;
         try {
@@ -81,19 +86,5 @@ public class DelayedProxyTest {
             }
         }
         return isRunning;
-    }
-
-    @Test
-    public void testRedisRunning() {
-        JedisPool pool = new JedisPool(REMOTE_HOST, REMOTE_PORT);
-        Jedis jedis = pool.getResource();
-        assertNotNull(jedis);
-    }
-
-    @Ignore
-    public void testClientOnForwardPort() {
-        JedisPool pool = new JedisPool(REMOTE_HOST, proxy.getRemotePort());
-        Jedis jedis = pool.getResource();
-        assertNotNull(jedis);
     }
 }
