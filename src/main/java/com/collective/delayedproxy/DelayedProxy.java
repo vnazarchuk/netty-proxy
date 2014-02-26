@@ -44,8 +44,11 @@ public class DelayedProxy {
     }
 
     public void stop() {
-        channel.close();
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
+        if (channel != null)
+            channel.close();
+        if (bossGroup != null)
+            bossGroup.shutdownGracefully();
+        if (workerGroup != null)
+            workerGroup.shutdownGracefully();
     }
 }
