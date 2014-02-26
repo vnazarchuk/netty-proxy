@@ -12,15 +12,11 @@ import static junit.framework.Assert.*;
 
 public class DelayedProxyTest {
 
-    final static int LOCAL_PORT = 2001;
-    final static int REMOTE_PORT = 2000;
-    final static String REMOTE_HOST = "127.0.0.1";
-
     DelayedProxy proxy;
 
     @Before
     public void startProxy() {
-        proxy = new DelayedProxy(LOCAL_PORT, REMOTE_PORT).start();
+        proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_PORT).start();
     }
 
     @After
@@ -32,8 +28,8 @@ public class DelayedProxyTest {
     public void testClientSocket() {
         ServerSocket socket = null;
         try {
-            socket = new ServerSocket(REMOTE_PORT);
-            new ProxyClient(REMOTE_HOST, REMOTE_PORT).start();
+            socket = new ServerSocket(Config.REMOTE_PORT);
+            new ProxyClient(Config.REMOTE_HOST, Config.REMOTE_PORT).start();
         } catch (Exception e) {
             e.printStackTrace();
             fail();
@@ -50,8 +46,8 @@ public class DelayedProxyTest {
 
     @Test
     public void testProxyInit() {
-        assertEquals(REMOTE_PORT, proxy.getRemotePort());
-        assertEquals(LOCAL_PORT, proxy.getLocalPort());
+        assertEquals(Config.REMOTE_PORT, proxy.getRemotePort());
+        assertEquals(Config.LOCAL_PORT, proxy.getLocalPort());
     }
 
     @Test
@@ -71,7 +67,7 @@ public class DelayedProxyTest {
         boolean isRunning = false;
         Socket socket = null;
         try {
-            socket = new Socket(REMOTE_HOST, LOCAL_PORT);
+            socket = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
             isRunning = socket.isConnected();
         } catch (IOException e) {
             e.printStackTrace();

@@ -17,7 +17,7 @@ public class RedisTest {
     @Before
     public void startRedis() {
         try {
-            redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(DelayedProxyTest.REMOTE_PORT)).start();
+            redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(Config.REMOTE_PORT)).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -30,28 +30,28 @@ public class RedisTest {
 
     @Test
     public void testRedisRunning() {
-        JedisPool pool = new JedisPool(DelayedProxyTest.REMOTE_HOST, DelayedProxyTest.REMOTE_PORT);
+        JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
 
     @Ignore
     public void testClientOnForwardPort() {
-        JedisPool pool = new JedisPool(DelayedProxyTest.REMOTE_HOST, DelayedProxyTest.LOCAL_PORT);
+        JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis jedis = pool.getResource();
         assertNotNull(jedis);
     }
 
     @Test
     public void testPortForwarding() {
-        JedisPool remotePool = new JedisPool(DelayedProxyTest.REMOTE_HOST, DelayedProxyTest.REMOTE_PORT);
-        JedisPool localPool = new JedisPool(DelayedProxyTest.REMOTE_HOST, DelayedProxyTest.LOCAL_PORT);
+        JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
+        JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis remoteJedis = remotePool.getResource();
         Jedis localJedis = localPool.getResource();
         try {
             remoteJedis.set("key1", "value1");
 
-            new DelayedProxy(DelayedProxyTest.LOCAL_PORT, DelayedProxyTest.REMOTE_PORT).start();
+            new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_PORT).start();
 
             String value = localJedis.get("key1");
             assertTrue(value.equals("value1"));
