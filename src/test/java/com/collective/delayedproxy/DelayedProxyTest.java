@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -35,10 +34,9 @@ public class DelayedProxyTest {
         try {
             socket = new ServerSocket(REMOTE_PORT);
             new ProxyClient(REMOTE_HOST, REMOTE_PORT).start();
-        } catch (ConnectException e) {
-            fail();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            fail();
         } finally {
             try {
                 if (socket != null) {
