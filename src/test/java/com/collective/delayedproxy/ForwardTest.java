@@ -4,11 +4,17 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.SocketTimeoutException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
 public class ForwardTest {
+
+    private volatile boolean failed = false;
 
     @Test
     public void testClientSocket() {
@@ -32,42 +38,35 @@ public class ForwardTest {
 
     @Test
     public void testClientSocketWithServerThread() {
-        ServerSocketThread serverThread = new ServerSocketThread();
+        ExecutorService service = Executors.newSingleThreadExecutor();
         try {
-            serverThread.start();
+            Future serverTask = service.submit(new ServerSocketTask());
             new ProxyClient(Config.REMOTE_HOST, Config.REMOTE_PORT).start();
-            serverThread.join();
+            assertTrue(Boolean.FALSE.equals(serverTask.get()));
         } catch (Exception e) {
             e.printStackTrace();
             fail();
+        } finally {
+            service.shutdown();
         }
     }
 
-    class ServerSocketThread extends Thread {
+    class ServerSocketTask implements Callable<Boolean> {
 
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
+        public Boolean call() {
+            try {
+                ServerSocket socket = new ServerSocket(Config.REMOTE_PORT);
+                socket.setSoTimeout(1000);
                 try {
-                    ServerSocket socket = new ServerSocket(Config.REMOTE_PORT);
-                    socket.setSoTimeout(1000);
-                    try {
-                        socket.accept();
-                    } catch (SocketTimeoutException e) {
-                        e.printStackTrace();
-                        fail();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        fail();
-                    } finally {
-                        socket.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    fail();
+                    socket.accept();
                 } finally {
-                    Thread.currentThread().interrupt();
+                    socket.close();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return true;
             }
+            return false;
         }
     }
 }
