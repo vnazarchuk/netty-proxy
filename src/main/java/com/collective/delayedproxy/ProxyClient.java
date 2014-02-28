@@ -23,7 +23,7 @@ public class ProxyClient {
                     .channel(NioSocketChannel.class)
                     .handler(new ChannelInboundHandlerAdapter());
             ChannelFuture future = bootstrap.connect(host, port).sync();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException consumed) {
 
         }
         return this;
