@@ -42,7 +42,7 @@ public class RedisTest {
         assertNotNull(jedis);
     }
 
-    @Test
+    @Ignore
     public void testPortForwarding() {
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
