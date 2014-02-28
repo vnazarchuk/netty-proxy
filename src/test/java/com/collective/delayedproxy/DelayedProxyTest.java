@@ -43,21 +43,16 @@ public class DelayedProxyTest {
     }
 
     private boolean isSocketConnected() {
-        boolean isRunning = false;
-        Socket socket = null;
         try {
-            socket = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
-            isRunning = socket.isConnected();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
+            Socket socket = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
             try {
-                if (socket != null)
-                    socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                socket.isConnected();
+            } finally {
+                socket.close();
             }
+        } catch (IOException e) {
+            return false;
         }
-        return isRunning;
+        return true;
     }
 }
