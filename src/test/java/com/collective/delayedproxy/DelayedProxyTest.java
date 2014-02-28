@@ -5,7 +5,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 
 import static junit.framework.Assert.*;
@@ -22,26 +21,6 @@ public class DelayedProxyTest {
     @After
     public void stopProxy() {
         proxy.stop();
-    }
-
-    @Test
-    public void testClientSocket() {
-        ServerSocket socket = null;
-        try {
-            socket = new ServerSocket(Config.REMOTE_PORT);
-            new ProxyClient(Config.REMOTE_HOST, Config.REMOTE_PORT).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        } finally {
-            try {
-                if (socket != null) {
-                    socket.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Test
