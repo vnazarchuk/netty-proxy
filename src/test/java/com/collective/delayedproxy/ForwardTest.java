@@ -3,7 +3,6 @@ package com.collective.delayedproxy;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Callable;
@@ -15,8 +14,6 @@ import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
 public class ForwardTest {
-
-    private volatile boolean failed = false;
 
     // todo: remove this test
     @Test
@@ -60,18 +57,12 @@ public class ForwardTest {
         try {
             Future serverTask = service.submit(new ServerSocketTask());
 
-            new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+            DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
-            Socket clientSocket = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
-            try {
-                OutputStreamWriter writer = new OutputStreamWriter(clientSocket.getOutputStream());
-                writer.write("anything");
-                writer.close();
-            } finally {
-                clientSocket.close();
-            }
+            new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT).close();
 
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
+            proxy.stop();
         } catch (Exception e) {
             e.printStackTrace();
             fail();
