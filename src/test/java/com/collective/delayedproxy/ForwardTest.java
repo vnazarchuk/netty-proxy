@@ -18,6 +18,7 @@ public class ForwardTest {
 
     private volatile boolean failed = false;
 
+    // todo: remove this test
     @Test
     public void testClientSocket() {
         ServerSocket socket = null;

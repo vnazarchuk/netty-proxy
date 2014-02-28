@@ -17,7 +17,6 @@ public class ProxyClient {
 
     public ProxyClient start() {
         try {
-
             Bootstrap bootstrap = new Bootstrap()
                     .group(new NioEventLoopGroup())
                     .channel(NioSocketChannel.class)
