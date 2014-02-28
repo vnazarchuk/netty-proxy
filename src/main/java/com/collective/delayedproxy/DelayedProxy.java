@@ -34,25 +34,31 @@ public class DelayedProxy {
     }
 
     public DelayedProxy start() {
-        bossGroup = new NioEventLoopGroup(1);
-        workerGroup = new NioEventLoopGroup();
-        ServerBootstrap bootstrap = new ServerBootstrap()
-                .group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
-                .handler(new LoggingHandler(LogLevel.INFO))
-                .childHandler(new ProxyServerHandler(remoteHost, remotePort));
+        try {
 
-        ChannelFuture future = bootstrap.bind(localPort).awaitUninterruptibly();
-        channel = future.channel();
+            bossGroup = new NioEventLoopGroup(1);
+            workerGroup = new NioEventLoopGroup();
+            ServerBootstrap bootstrap = new ServerBootstrap()
+                    .group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new ProxyServerHandler(remoteHost, remotePort));
+
+            ChannelFuture future = bootstrap.bind(localPort).sync();
+            channel = future.channel();
+        } catch (InterruptedException consumed) {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        }
         return this;
     }
 
     public void stop() {
         if (channel != null)
-            channel.close();
+            channel.close().syncUninterruptibly();
         if (bossGroup != null)
-            bossGroup.shutdownGracefully();
+            bossGroup.shutdownGracefully().syncUninterruptibly();
         if (workerGroup != null)
-            workerGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully().syncUninterruptibly();
     }
 }
