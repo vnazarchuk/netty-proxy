@@ -15,7 +15,7 @@ public class DelayedProxyTest {
 
     @Before
     public void startProxy() {
-        proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_PORT).start();
+        proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
     }
 
     @After

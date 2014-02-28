@@ -51,7 +51,7 @@ public class RedisTest {
         try {
             remoteJedis.set("key1", "value1");
 
-            new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_PORT).start();
+            new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
             String value = localJedis.get("key1");
             assertTrue(value.equals("value1"));

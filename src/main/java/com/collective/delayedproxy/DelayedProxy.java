@@ -12,12 +12,14 @@ public class DelayedProxy {
 
     private final int localPort;
     private final int remotePort;
+    private final String remoteHost;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel channel;
 
-    public DelayedProxy(int localPort, int remotePort) {
+    public DelayedProxy(int localPort, String remoteHost, int remotePort) {
         this.localPort = localPort;
+        this.remoteHost = remoteHost;
         this.remotePort = remotePort;
     }
 
