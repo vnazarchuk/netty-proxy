@@ -3,7 +3,9 @@ package com.collective.delayedproxy;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +53,33 @@ public class ForwardTest {
         }
     }
 
-    class ServerSocketTask implements Callable<Boolean> {
+    @Test
+    public void testClientSocketWithProxyServer() {
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            Future serverTask = service.submit(new ServerSocketTask());
+
+            new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+
+            Socket clientSocket = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
+            try {
+                OutputStreamWriter writer = new OutputStreamWriter(clientSocket.getOutputStream());
+                writer.write("anything");
+                writer.close();
+            } finally {
+                clientSocket.close();
+            }
+
+            assertTrue(Boolean.FALSE.equals(serverTask.get()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        } finally {
+            service.shutdown();
+        }
+    }
+
+    private class ServerSocketTask implements Callable<Boolean> {
 
         public Boolean call() {
             try {
