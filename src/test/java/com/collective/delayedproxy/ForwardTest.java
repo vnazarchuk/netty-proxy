@@ -74,12 +74,12 @@ public class ForwardTest {
     public void testReadFromProxyServer() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = executor.submit(new Server.Builder().read("anything").build());
+            Future serverTask = executor.submit(new Server.Builder().read("read test").build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
             Socket client = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
-            Server.write(client, "anything");
+            Server.write(client, "read test");
             client.close();
 
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
@@ -97,7 +97,7 @@ public class ForwardTest {
     public void testWriteToProxyServer() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = executor.submit(new Server.Builder().write("anything").build());
+            Future serverTask = executor.submit(new Server.Builder().write("write test").build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
@@ -105,7 +105,7 @@ public class ForwardTest {
 
             System.out.println("PROXY SERVER CLIENT: connected");
 
-            Server.read(client, "anything");
+            Server.read(client, "write test");
             client.close();
 
             assertTrue(Boolean.FALSE.equals(serverTask.get()));

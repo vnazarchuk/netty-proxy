@@ -24,4 +24,9 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
         System.out.println("PROXY CLIENT: channel inactive");
         ProxyServerHandler.closeOnFlush(inboundChannel);
     }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        inboundChannel.writeAndFlush(msg).addListener(new ChannelReadListener(ctx.channel()));
+    }
 }
