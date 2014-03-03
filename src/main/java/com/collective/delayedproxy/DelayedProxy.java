@@ -4,6 +4,7 @@ import com.collective.delayedproxy.channel.ProxyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -42,8 +43,8 @@ public class DelayedProxy {
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new ProxyServerHandler(remoteHost, remotePort));
-
+                    .childHandler(new ProxyServerHandler(remoteHost, remotePort))
+                    .childOption(ChannelOption.AUTO_READ, false);
             ChannelFuture future = bootstrap.bind(localPort).sync();
             channel = future.channel();
         } catch (InterruptedException consumed) {
