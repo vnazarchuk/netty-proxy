@@ -31,7 +31,17 @@ public class RedisTest {
     public void testRedisRunning() {
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis jedis = pool.getResource();
-        assertNotNull(jedis);
+        try {
+            assertNotNull(jedis);
+        } catch (JedisConnectionException e) {
+            e.printStackTrace();
+            fail();
+        } finally {
+            if (jedis != null) {
+                pool.returnResource(jedis);
+            }
+            pool.destroy();
+        }
     }
 
     @Test
@@ -39,8 +49,18 @@ public class RedisTest {
         DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis jedis = pool.getResource();
-        proxy.stop();
-        assertNotNull(jedis);
+        try {
+            assertNotNull(jedis);
+        } catch (JedisConnectionException e) {
+            e.printStackTrace();
+            fail();
+        } finally {
+            proxy.stop();
+            if (jedis != null) {
+                pool.returnResource(jedis);
+            }
+            pool.destroy();
+        }
     }
 
     @Test
