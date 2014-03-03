@@ -1,14 +1,10 @@
 package com.collective.delayedproxy;
 
+import com.collective.delayedproxy.util.Server;
 import org.junit.Test;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -21,9 +17,9 @@ public class ForwardTest {
     // todo: remove this test
     @Test
     public void testClientSocket() {
-        ServerSocket socket = null;
+        java.net.ServerSocket socket = null;
         try {
-            socket = new ServerSocket(Config.REMOTE_PORT);
+            socket = new java.net.ServerSocket(Config.REMOTE_PORT);
             new ProxyClient.Builder(Config.REMOTE_HOST, Config.REMOTE_PORT).build().start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -41,24 +37,24 @@ public class ForwardTest {
 
     @Test
     public void testClientSocketWithServerThread() {
-        ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = service.submit(new ServerSocketTask());
+            Future serverTask = executor.submit(new Server.Builder().build());
             new ProxyClient.Builder(Config.REMOTE_HOST, Config.REMOTE_PORT).build().start();
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
         } catch (Exception e) {
             e.printStackTrace();
             fail();
         } finally {
-            service.shutdown();
+            executor.shutdown();
         }
     }
 
     @Test
     public void testClientSocketWithProxyServer() {
-        ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = service.submit(new ServerSocketTask());
+            Future serverTask = executor.submit(new Server.Builder().build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
@@ -70,25 +66,20 @@ public class ForwardTest {
             e.printStackTrace();
             fail();
         } finally {
-            service.shutdown();
+            executor.shutdown();
         }
     }
 
     @Test
     public void testReadFromProxyServer() {
-        ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = service.submit(new ServerSocketTask().withRead());
+            Future serverTask = executor.submit(new Server.Builder().read("anything").build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
             Socket client = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
-            System.out.println("PROXY SERVER CLIENT: connected");
-            OutputStreamWriter writer = new OutputStreamWriter(client.getOutputStream());
-            System.out.println("PROXY SERVER CLIENT: writing");
-            writer.write("anything");
-            System.out.println("PROXY SERVER CLIENT: closing");
-            writer.close();
+            Server.write(client, "anything");
             client.close();
 
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
@@ -98,49 +89,33 @@ public class ForwardTest {
             e.printStackTrace();
             fail();
         } finally {
-            service.shutdown();
+            executor.shutdown();
         }
     }
 
-    private class ServerSocketTask implements Callable<Boolean> {
+    @Test
+    public void testWriteToProxyServer() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future serverTask = executor.submit(new Server.Builder().write("anything").build());
 
-        private ServerSocketReader reader = null;
+            DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
-        public Boolean call() {
-            try {
-                ServerSocket socket = new ServerSocket(Config.REMOTE_PORT);
-                socket.setSoTimeout(1000);
-                try {
-                    System.out.println("SERVER: waiting to accept");
-                    Socket client = socket.accept();
-                    if (reader != null) {
-                        reader.read(client);
-                    }
-                } finally {
-                    socket.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return true;
-            }
-            return false;
-        }
+            Socket client = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
 
-        public ServerSocketTask withRead() {
-            reader = new ServerSocketReader();
-            return this;
-        }
+            System.out.println("PROXY SERVER CLIENT: connected");
 
-        private class ServerSocketReader {
+            Server.read(client, "anything");
+            client.close();
 
-            public void read(Socket socket) throws IOException {
-                socket.setSoTimeout(1000);
-                System.out.println("SERVER: accepted");
-                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                System.out.println("SERVER: reading");
-                System.out.println(reader.readLine());
-                reader.close();
-            }
+            assertTrue(Boolean.FALSE.equals(serverTask.get()));
+
+            proxy.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        } finally {
+            executor.shutdown();
         }
     }
 }
