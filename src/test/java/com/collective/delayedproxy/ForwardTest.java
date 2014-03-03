@@ -39,7 +39,7 @@ public class ForwardTest {
     public void testClientSocketWithServerThread() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = executor.submit(new Server.Builder().build());
+            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).build());
             new ProxyClient.Builder(Config.REMOTE_HOST, Config.REMOTE_PORT).build().start();
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
         } catch (Exception e) {
@@ -54,7 +54,7 @@ public class ForwardTest {
     public void testClientSocketWithProxyServer() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = executor.submit(new Server.Builder().build());
+            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
@@ -74,7 +74,7 @@ public class ForwardTest {
     public void testReadFromProxyServer() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = executor.submit(new Server.Builder().read("read test").build());
+            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).read("read test").build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
@@ -97,7 +97,7 @@ public class ForwardTest {
     public void testWriteToProxyServer() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
-            Future serverTask = executor.submit(new Server.Builder().write("write test").build());
+            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).write("write test").build());
 
             DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 

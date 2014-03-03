@@ -1,7 +1,5 @@
 package com.collective.delayedproxy.util;
 
-import com.collective.delayedproxy.Config;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,11 +10,14 @@ import java.util.concurrent.Callable;
 
 public class Server implements Callable<Boolean> {
 
+    private final int port;
+
     private final boolean isRead;
     private final boolean isWrite;
     private final String msg;
 
     private Server(Builder builder) {
+        this.port = builder.port;
         this.isRead = builder.isRead;
         this.isWrite = builder.isWrite;
         this.msg = builder.msg;
@@ -44,7 +45,7 @@ public class Server implements Callable<Boolean> {
 
     public Boolean call() {
         try {
-            ServerSocket socket = new ServerSocket(Config.REMOTE_PORT);
+            ServerSocket socket = new ServerSocket(port);
             socket.setSoTimeout(1000);
             try {
                 System.out.println("SERVER: waiting to accept");
@@ -66,12 +67,18 @@ public class Server implements Callable<Boolean> {
 
     public static class Builder {
 
+        private final int port;
+
         private boolean isRead = false;
         private boolean isWrite = false;
         private String msg = null;
 
         public Server build() {
             return new Server(this);
+        }
+
+        public Builder(int port) {
+            this.port = port;
         }
 
         public Builder read(String msg) {
