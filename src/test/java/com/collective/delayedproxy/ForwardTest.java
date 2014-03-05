@@ -2,6 +2,8 @@ package com.collective.delayedproxy;
 
 import com.collective.delayedproxy.util.Server;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -14,6 +16,8 @@ import static junit.framework.Assert.fail;
 
 public class ForwardTest {
 
+    private static final Logger log = LoggerFactory.getLogger(ForwardTest.class);
+
     // todo: remove this test
     @Test
     public void testClientSocket() {
@@ -21,8 +25,8 @@ public class ForwardTest {
         try {
             socket = new java.net.ServerSocket(Config.REMOTE_PORT);
             new ProxyClient.Builder(Config.REMOTE_HOST, Config.REMOTE_PORT).build().start();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            log.error("Couldn't open server socket", e);
             fail();
         } finally {
             try {
@@ -30,7 +34,7 @@ public class ForwardTest {
                     socket.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("", e);
             }
         }
     }
@@ -43,7 +47,7 @@ public class ForwardTest {
             new ProxyClient.Builder(Config.REMOTE_HOST, Config.REMOTE_PORT).build().start();
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("", e);
             fail();
         } finally {
             executor.shutdown();
@@ -56,14 +60,14 @@ public class ForwardTest {
         try {
             Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).build());
 
-            DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+            ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
             new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT).close();
 
             assertTrue(Boolean.FALSE.equals(serverTask.get()));
             proxy.stop();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("", e);
             fail();
         } finally {
             executor.shutdown();
@@ -76,7 +80,7 @@ public class ForwardTest {
         try {
             Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).read("read test").build());
 
-            DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+            ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
             Socket client = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
             Server.write(client, "read test");
@@ -86,7 +90,7 @@ public class ForwardTest {
 
             proxy.stop();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("", e);
             fail();
         } finally {
             executor.shutdown();
@@ -99,11 +103,9 @@ public class ForwardTest {
         try {
             Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).write("write test").build());
 
-            DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+            ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
             Socket client = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
-
-            System.out.println("PROXY SERVER CLIENT: connected");
 
             Server.read(client, "write test");
             client.close();
@@ -112,7 +114,7 @@ public class ForwardTest {
 
             proxy.stop();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("", e);
             fail();
         } finally {
             executor.shutdown();

@@ -11,11 +11,11 @@ import static junit.framework.Assert.*;
 
 public class DelayedProxyTest {
 
-    DelayedProxy proxy;
+    ProxyServer proxy;
 
     @Before
     public void startProxy() {
-        proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+        proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
     }
 
     @After

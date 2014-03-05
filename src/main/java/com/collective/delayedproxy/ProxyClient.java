@@ -6,8 +6,11 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ProxyClient {
+    private static final Logger log = LoggerFactory.getLogger(ProxyClient.class);
     private final String host;
     private final int port;
     private final Channel inboundChannel;
@@ -21,7 +24,7 @@ public class ProxyClient {
     }
 
     public ChannelFuture start() {
-        System.out.println("PROXY CLIENT: starting");
+        log.info("Starting proxy client: host: {}, port: {}", host, port);
         try {
             Bootstrap bootstrap = new Bootstrap()
                     .group(new NioEventLoopGroup())
@@ -35,7 +38,7 @@ public class ProxyClient {
                     });
             return bootstrap.connect(host, port).sync();
         } catch (InterruptedException consumed) {
-
+            log.error("Interrupted", consumed);
         }
         return null;
     }

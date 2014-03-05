@@ -1,5 +1,8 @@
 package com.collective.delayedproxy.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,8 +13,8 @@ import java.util.concurrent.Callable;
 
 public class Server implements Callable<Boolean> {
 
+    private static final Logger log = LoggerFactory.getLogger(Server.class);
     private final int port;
-
     private final boolean isRead;
     private final boolean isWrite;
     private final String msg;
@@ -26,9 +29,9 @@ public class Server implements Callable<Boolean> {
     public static void read(Socket socket, String msg) throws IOException {
         socket.setSoTimeout(1000);
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        System.out.println("SERVER: reading");
+        log.debug("reading");
         String readMsg = reader.readLine();
-        System.out.println(readMsg);
+        log.debug("read message = {}", readMsg);
         if (readMsg == null || !readMsg.equals(msg)) {
             throw new IOException();
         }
@@ -37,9 +40,8 @@ public class Server implements Callable<Boolean> {
 
     public static void write(Socket socket, String msg) throws IOException {
         OutputStreamWriter writer = new OutputStreamWriter(socket.getOutputStream());
-        System.out.println("SERVER: writing");
+        log.debug("writing");
         writer.write(msg);
-        System.out.println("SERVER: closing");
         writer.close();
     }
 
@@ -48,9 +50,8 @@ public class Server implements Callable<Boolean> {
             ServerSocket socket = new ServerSocket(port);
             socket.setSoTimeout(1000);
             try {
-                System.out.println("SERVER: waiting to accept");
+                log.debug("accepting");
                 Socket client = socket.accept();
-                System.out.println("SERVER: accepted");
                 if (isRead)
                     read(client, msg);
                 if (isWrite)
@@ -73,12 +74,12 @@ public class Server implements Callable<Boolean> {
         private boolean isWrite = false;
         private String msg = null;
 
-        public Server build() {
-            return new Server(this);
-        }
-
         public Builder(int port) {
             this.port = port;
+        }
+
+        public Server build() {
+            return new Server(this);
         }
 
         public Builder read(String msg) {

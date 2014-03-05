@@ -10,9 +10,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class DelayedProxy {
+public class ProxyServer {
 
+    private static final Logger log = LoggerFactory.getLogger(ProxyServer.class);
     private final int localPort;
     private final int remotePort;
     private final String remoteHost;
@@ -20,7 +23,7 @@ public class DelayedProxy {
     private EventLoopGroup workerGroup;
     private Channel channel;
 
-    public DelayedProxy(int localPort, String remoteHost, int remotePort) {
+    public ProxyServer(int localPort, String remoteHost, int remotePort) {
         this.localPort = localPort;
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
@@ -34,9 +37,9 @@ public class DelayedProxy {
         return remotePort;
     }
 
-    public DelayedProxy start() {
+    public ProxyServer start() {
+        log.info("Starting proxy server: port: {}", localPort);
         try {
-
             bossGroup = new NioEventLoopGroup(1);
             workerGroup = new NioEventLoopGroup();
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -48,18 +51,20 @@ public class DelayedProxy {
             ChannelFuture future = bootstrap.bind(localPort).sync();
             channel = future.channel();
         } catch (InterruptedException consumed) {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
+            log.error("Interrupted", consumed);
+            stop();
         }
         return this;
     }
 
     public void stop() {
+        log.info("Stopping");
         if (channel != null)
             channel.close().syncUninterruptibly();
         if (bossGroup != null)
             bossGroup.shutdownGracefully().syncUninterruptibly();
         if (workerGroup != null)
             workerGroup.shutdownGracefully().syncUninterruptibly();
+        log.debug("Stopped");
     }
 }

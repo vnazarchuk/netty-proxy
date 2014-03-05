@@ -3,6 +3,8 @@ package com.collective.delayedproxy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -11,30 +13,33 @@ import static junit.framework.Assert.*;
 
 public class RedisTest {
 
+    private static final Logger log = LoggerFactory.getLogger(RedisTest.class);
     Process redisProcess;
 
     @Before
     public void startRedis() {
         try {
+            log.info("Starting Redis, port: {}", Config.REMOTE_PORT);
             redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(Config.REMOTE_PORT)).start();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Couldn't start Redis", e);
         }
     }
 
     @After
     public void stopRedis() {
+        log.info("Stopping Redis");
         redisProcess.destroy();
     }
 
     @Test
-    public void testRedisRunning() {
+    public void isRedisRunning() {
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis jedis = pool.getResource();
         try {
             assertNotNull(jedis);
         } catch (JedisConnectionException e) {
-            e.printStackTrace();
+            log.error("jedis error", e);
             fail();
         } finally {
             if (jedis != null) {
@@ -46,13 +51,13 @@ public class RedisTest {
 
     @Test
     public void testClientOnForwardPort() {
-        DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis jedis = pool.getResource();
         try {
             assertNotNull(jedis);
         } catch (JedisConnectionException e) {
-            e.printStackTrace();
+            log.error("jedis error", e);
             fail();
         } finally {
             proxy.stop();
@@ -68,7 +73,7 @@ public class RedisTest {
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis remoteJedis = remotePool.getResource();
 
-        DelayedProxy proxy = new DelayedProxy(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
 
         JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis localJedis = localPool.getResource();
@@ -76,10 +81,10 @@ public class RedisTest {
             remoteJedis.set("key1", "lorem ipsum...");
 
             String value = localJedis.get("key1");
-            System.out.println("REDIS: test value: " + value);
 
             assertTrue(value.equals("lorem ipsum..."));
         } catch (JedisConnectionException e) {
+            log.error("jedis error", e);
             if (remoteJedis != null) {
                 remotePool.returnBrokenResource(remoteJedis);
                 remoteJedis = null;
@@ -88,7 +93,6 @@ public class RedisTest {
                 localPool.returnBrokenResource(localJedis);
                 localJedis = null;
             }
-            e.printStackTrace();
             fail();
         } finally {
             proxy.stop();
