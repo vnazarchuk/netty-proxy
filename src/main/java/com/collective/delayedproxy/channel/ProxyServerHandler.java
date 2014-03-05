@@ -19,7 +19,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     static void closeOnFlush(Channel channel) {
-        if (channel.isActive()) {
+        if (channel != null && channel.isActive()) {
             channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }

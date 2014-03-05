@@ -21,6 +21,7 @@ public class RedisTest {
         try {
             log.info("Starting Redis, port: {}", Config.REMOTE_PORT);
             redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(Config.REMOTE_PORT)).start();
+            Thread.sleep(1000);
         } catch (Exception e) {
             log.error("Couldn't start Redis", e);
         }

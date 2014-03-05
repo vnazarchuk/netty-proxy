@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.Socket;
 
-import static junit.framework.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DelayedProxyTest {
 
@@ -25,21 +25,21 @@ public class DelayedProxyTest {
 
     @Test
     public void testProxyInit() {
-        assertEquals(Config.REMOTE_PORT, proxy.getRemotePort());
-        assertEquals(Config.LOCAL_PORT, proxy.getLocalPort());
+        assertThat(proxy.getRemotePort()).isEqualTo(Config.REMOTE_PORT);
+        assertThat(proxy.getLocalPort()).isEqualTo(Config.LOCAL_PORT);
     }
 
     @Test
     public void testProxyShutdownAndStart() {
         proxy.stop();
-        assertFalse(isSocketConnected());
+        assertThat(isSocketConnected()).isFalse();
         proxy.start();
-        assertTrue(isSocketConnected());
+        assertThat(isSocketConnected()).isTrue();
     }
 
     @Test
     public void testProxyRunning() {
-        assertTrue(isSocketConnected());
+        assertThat(isSocketConnected()).isTrue();
     }
 
     private boolean isSocketConnected() {
