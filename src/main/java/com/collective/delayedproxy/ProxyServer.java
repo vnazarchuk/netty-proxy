@@ -58,13 +58,13 @@ public class ProxyServer {
     }
 
     public void stop() {
-        log.info("Stopping");
+        log.info("Stopping proxy server");
         if (channel != null)
             channel.close().syncUninterruptibly();
         if (bossGroup != null)
             bossGroup.shutdownGracefully().syncUninterruptibly();
         if (workerGroup != null)
             workerGroup.shutdownGracefully().syncUninterruptibly();
-        log.debug("Stopped");
+        log.info("Stopped proxy server");
     }
 }

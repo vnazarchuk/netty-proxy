@@ -17,20 +17,20 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel active");
+        log.trace("Channel active");
         ctx.read();
         ctx.write(Unpooled.EMPTY_BUFFER);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel inactive");
+        log.trace("Channel inactive");
         ProxyServerHandler.closeOnFlush(inboundChannel);
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        log.debug("Channel read");
+        log.trace("Channel read");
         inboundChannel.writeAndFlush(msg).addListener(new ChannelReadListener(ctx.channel()));
     }
 }

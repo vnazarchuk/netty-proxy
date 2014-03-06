@@ -29,9 +29,9 @@ public class Server implements Callable<Boolean> {
     public static void read(Socket socket, String msg) throws IOException {
         socket.setSoTimeout(1000);
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        log.debug("reading");
+        log.trace("reading input stream");
         String readMsg = reader.readLine();
-        log.debug("read message = {}", readMsg);
+        log.debug("read message: {}", readMsg);
         if (readMsg == null || !readMsg.equals(msg)) {
             throw new IOException();
         }
@@ -40,7 +40,7 @@ public class Server implements Callable<Boolean> {
 
     public static void write(Socket socket, String msg) throws IOException {
         OutputStreamWriter writer = new OutputStreamWriter(socket.getOutputStream());
-        log.debug("writing");
+        log.trace("writing to output stream");
         writer.write(msg);
         writer.close();
     }
@@ -50,7 +50,7 @@ public class Server implements Callable<Boolean> {
             ServerSocket socket = new ServerSocket(port);
             socket.setSoTimeout(1000);
             try {
-                log.debug("accepting");
+                log.trace("accepting socket");
                 Socket client = socket.accept();
                 if (isRead)
                     read(client, msg);

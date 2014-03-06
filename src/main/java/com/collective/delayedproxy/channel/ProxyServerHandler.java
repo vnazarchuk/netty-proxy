@@ -26,7 +26,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.debug("Channel active");
+        log.trace("Channel active");
         ChannelFuture future = new ProxyClient.Builder(remoteHost, remotePort).channel(ctx.channel()).build().start();
         outboundChannel = future.channel();
         inboundListener = new ChannelReadListener(ctx.channel());
@@ -35,7 +35,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
-        log.debug("Channel read");
+        log.trace("Channel read");
         if (outboundChannel.isActive()) {
             outboundChannel.writeAndFlush(msg).addListener(inboundListener);
         }
@@ -43,7 +43,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.debug("channel inactive");
+        log.trace("channel inactive");
         closeOnFlush(outboundChannel);
     }
 }
