@@ -46,4 +46,9 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
         log.trace("channel inactive");
         closeOnFlush(outboundChannel);
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("Exception caught", cause);
+    }
 }

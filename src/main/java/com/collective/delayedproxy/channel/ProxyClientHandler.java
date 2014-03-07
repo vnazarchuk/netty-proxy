@@ -33,4 +33,9 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
         log.trace("Channel read");
         inboundChannel.writeAndFlush(msg).addListener(new ChannelReadListener(ctx.channel()));
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.error("Exception caught", cause);
+    }
 }
