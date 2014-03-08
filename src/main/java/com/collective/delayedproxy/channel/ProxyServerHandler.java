@@ -1,6 +1,7 @@
 package com.collective.delayedproxy.channel;
 
 import com.collective.delayedproxy.ProxyClient;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import org.slf4j.Logger;
@@ -36,6 +37,8 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         log.trace("Channel read");
+        ByteBuf buf = (ByteBuf) msg;
+        log.info("chunk length: {}", buf.readableBytes());
         if (outboundChannel.isActive()) {
             outboundChannel.writeAndFlush(msg).addListener(inboundListener);
         }
@@ -43,7 +46,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.trace("channel inactive");
+        log.trace("Channel inactive");
         closeOnFlush(outboundChannel);
     }
 

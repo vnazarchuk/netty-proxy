@@ -14,4 +14,6 @@
 
     <logger name="com.collective.delayedproxy" level="TRACE"/>
 
+    <logger name="io.netty.util.internal" level="INFO"/>
+
 </configuration>
