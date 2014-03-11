@@ -1,5 +1,6 @@
 package com.collective.delayedproxy;
 
+import com.collective.delayedproxy.channel.DelayHandler;
 import com.collective.delayedproxy.channel.ProxyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -12,12 +13,14 @@ import org.slf4j.LoggerFactory;
 public class ProxyServer {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyServer.class);
+    private static final String DELAY_HANDLER_NAME = "delay";
     private final int localPort;
     private final int remotePort;
     private final String remoteHost;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel channel;
+    private int timeout = 0;
 
     public ProxyServer(int localPort, String remoteHost, int remotePort) {
         this.localPort = localPort;
@@ -45,23 +48,30 @@ public class ProxyServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast(new ProxyServerHandler(remoteHost, remotePort));
+                            socketChannel.pipeline().addLast(new DelayHandler(timeout), new ProxyServerHandler(remoteHost, remotePort));
                         }
                     })
                     .childOption(ChannelOption.AUTO_READ, false);
             ChannelFuture future = bootstrap.bind(localPort).sync();
             channel = future.channel();
-        } catch (InterruptedException consumed) {
-            log.error("Interrupted", consumed);
+        } catch (InterruptedException e) {
+            log.error("Interrupted", e);
             stop();
         }
         return this;
     }
 
+    public ProxyServer delay(int timeout) {
+        this.timeout = timeout;
+        return this;
+    }
+
     public void stop() {
         log.info("Stopping proxy server");
-        if (channel != null)
+        if (channel != null) {
             channel.close().syncUninterruptibly();
+            channel = null;
+        }
         if (bossGroup != null)
             bossGroup.shutdownGracefully().syncUninterruptibly();
         if (workerGroup != null)

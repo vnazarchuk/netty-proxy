@@ -2,12 +2,12 @@ package com.collective.delayedproxy;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -248,9 +248,32 @@ public class RedisTest {
         remotePool.destroy();
     }
 
-    @Test
-    @Ignore("TBD")
-    public void testDelay() {
+    @Test(expected = JedisConnectionException.class)
+    public void initWithDelay() {
 
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).delay(2000).start();
+        JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
+        Jedis localJedis = localPool.getResource();
+
+        localJedis.get("key1");
+
+        localPool.returnResource(localJedis);
+        localPool.destroy();
+        proxy.stop();
+    }
+
+    @Test(expected = JedisConnectionException.class)
+    public void setDelayAtRuntime() {
+
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+        JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
+        Jedis localJedis = localPool.getResource();
+        proxy.delay(2000);
+
+        localJedis.get("key1");
+
+        localPool.returnResource(localJedis);
+        localPool.destroy();
+        proxy.stop();
     }
 }
