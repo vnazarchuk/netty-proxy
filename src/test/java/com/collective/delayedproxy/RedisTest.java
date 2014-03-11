@@ -171,17 +171,17 @@ public class RedisTest {
                 }
             });
         }
-        executor.awaitTermination(2, TimeUnit.SECONDS);
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
 
         // verify
         assertThat(resultMap).isEqualTo(map);
 
         // tear down
-        executor.shutdown();
+        proxy.stop();
         remotePool.returnResource(remoteJedis);
         localPool.destroy();
         remotePool.destroy();
-        proxy.stop();
     }
 
     @Test
