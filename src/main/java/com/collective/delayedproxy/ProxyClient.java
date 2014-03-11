@@ -25,22 +25,21 @@ public class ProxyClient {
 
     public ChannelFuture start() {
         log.info("Starting proxy client: host: {}, port: {}", host, port);
-        try {
-            Bootstrap bootstrap = new Bootstrap()
-                    .group(new NioEventLoopGroup())
-                    .channel(inboundChannel.getClass())
-                    .option(ChannelOption.AUTO_READ, false)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast(new ProxyClientHandler(inboundChannel));
-                        }
-                    });
-            return bootstrap.connect(host, port).sync();
-        } catch (InterruptedException consumed) {
-            log.error("Interrupted", consumed);
-        }
-        return null;
+        ChannelFuture future = new Bootstrap()
+                .group(group)
+                .channel(inboundChannel.getClass())
+                .option(ChannelOption.AUTO_READ, false)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        log.trace("Adding client handler...");
+                        socketChannel.pipeline().addLast(new ProxyClientHandler(inboundChannel));
+                        log.trace("Added client handler");
+                    }
+                })
+                .connect(host, port);
+        log.trace("Created client bootstrap");
+        return future;
     }
 
     public static class Builder {

@@ -16,6 +16,7 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
 
     public ProxyClientHandler(Channel inboundChannel) {
         this.inboundChannel = inboundChannel;
+        log.trace("Created client handler");
     }
 
     @Override
@@ -36,12 +37,13 @@ public class ProxyClientHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         log.trace("Channel read");
         ByteBuf buf = (ByteBuf) msg;
-        log.info("chunk length: {}", buf.readableBytes());
+        log.info("Chunk length: {}", buf.readableBytes());
         inboundChannel.writeAndFlush(msg).addListener(outboundListener);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.error("Exception caught", cause);
+        ProxyServerHandler.closeOnFlush(ctx.channel());
     }
 }

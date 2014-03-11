@@ -8,15 +8,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger log = LoggerFactory.getLogger(ProxyServerHandler.class);
     private final String remoteHost;
     private final int remotePort;
     ChannelFutureListener inboundListener;
-    private Channel outboundChannel;
-    private static final Logger log = LoggerFactory.getLogger(ProxyServerHandler.class);
+    private volatile Channel outboundChannel;
 
     public ProxyServerHandler(String remoteHost, int remotePort) {
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
+        log.trace("Created server handler");
     }
 
     static void closeOnFlush(Channel channel) {
@@ -38,7 +39,7 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         log.trace("Channel read");
         ByteBuf buf = (ByteBuf) msg;
-        log.info("chunk length: {}", buf.readableBytes());
+        log.info("Chunk length: {}", buf.readableBytes());
         if (outboundChannel.isActive()) {
             outboundChannel.writeAndFlush(msg).addListener(inboundListener);
         }
@@ -53,5 +54,6 @@ public class ProxyServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         log.error("Exception caught", cause);
+        ctx.close();
     }
 }
