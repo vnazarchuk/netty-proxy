@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -136,15 +138,15 @@ public class RedisTest {
 
     @Test
     public void testWithMultipleClientsConcurrently() throws Exception {
-
         // set up
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis remoteJedis = remotePool.getResource();
         ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
         final JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
+
         final String key = "key";
         final String originalValue = "value";
-        int threadCount = 32;
+        final int threadCount = 32;
         Map<String, String> map = new HashMap<String, String>(threadCount);
         final Map<String, String> resultMap = new ConcurrentHashMap<String, String>(threadCount);
         for (int i = 0; i < threadCount; i++) {
@@ -185,9 +187,65 @@ public class RedisTest {
     }
 
     @Test
-    @Ignore("TBD")
-    public void testWithMultipleClientsConcurrentlyAndLargeData() {
+    public void testWithMultipleClientsConcurrentlyAndLargeData() throws Exception {
+        // set up
+        JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
+        Jedis remoteJedis = remotePool.getResource();
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+        final JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
 
+        final String key = "key";
+        final int threadCount = 500;
+        Map<byte[], byte[]> map = new HashMap<byte[], byte[]>(threadCount);
+        final Map<byte[], byte[]> resultMap = new ConcurrentHashMap<byte[], byte[]>(threadCount);
+        for (int i = 0; i < threadCount; i++) {
+            byte[] k = (key + i).getBytes();
+            byte[] v = ByteBuffer.allocate(4000).putInt(i).array();
+            map.put(k, v);
+            resultMap.put(k, ByteBuffer.allocate(4).putInt(-1).array());
+            remoteJedis.set(k, v);
+        }
+
+        // Initial check to confirm values aren't read from Server. Redundant but makes me feel better at the moment
+        Set<byte[]> ks = map.keySet();
+        Set<byte[]> rKeys = resultMap.keySet();
+        assertThat(rKeys).isEqualTo(ks);
+        for (byte[] k : resultMap.keySet()) {
+            assertThat(resultMap.get(k)).isNotEqualTo(map.get(k));
+        }
+
+        // run test
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        for (final byte[] k : resultMap.keySet()) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Jedis localJedis = localPool.getResource();
+                    log.trace("Getting value with key: {}...", k);
+                    byte[] v = localJedis.get(k);
+//                    log.trace("Got value: {}:{}", k, v);
+                    log.trace("Array length: {}", v.length);
+                    localPool.returnResource(localJedis);
+                    resultMap.put(k, v);
+                }
+            });
+        }
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        // verify
+        Set<byte[]> keys = map.keySet();
+        Set<byte[]> resultKeys = resultMap.keySet();
+        assertThat(resultKeys).isEqualTo(keys);
+        for (byte[] k : resultMap.keySet()) {
+            assertThat(resultMap.get(k)).isEqualTo(map.get(k));
+        }
+
+        // tear down
+        proxy.stop();
+        remotePool.returnResource(remoteJedis);
+        localPool.destroy();
+        remotePool.destroy();
     }
 
     @Test
