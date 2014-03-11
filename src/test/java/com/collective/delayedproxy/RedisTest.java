@@ -2,6 +2,7 @@ package com.collective.delayedproxy;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class RedisTest {
     @Test
     public void isRedisRunning() {
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
-        log.trace("created pool");
+        log.trace("Created pool");
         Jedis jedis = pool.getResource();
         pool.returnResource(jedis);
         pool.destroy();
@@ -54,7 +55,7 @@ public class RedisTest {
     public void testClientOnForwardPort() {
         ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
-        log.trace("created pool");
+        log.trace("Created pool");
         Jedis jedis = pool.getResource();
         pool.returnResource(jedis);
         pool.destroy();
@@ -66,17 +67,17 @@ public class RedisTest {
     public void testPortForwarding() {
 
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
-        log.trace("pool: {}", remotePool.toString());
-        log.trace("created remote pool");
+        log.trace("Pool: {}", remotePool.toString());
+        log.trace("Created remote pool");
         Jedis remoteJedis = remotePool.getResource();
-        log.trace("created remote jedis");
+        log.trace("Created remote jedis");
 
         ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
-        log.trace("created proxy server");
+        log.trace("Created proxy server");
 
         JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis localJedis = localPool.getResource();
-        log.trace("created local jedis resources");
+        log.trace("Created local jedis resources");
 
         remoteJedis.set("key1", "lorem ipsum...");
 
@@ -113,17 +114,16 @@ public class RedisTest {
                 @Override
                 public String call() throws Exception {
                     Jedis localJedis = localPool.getResource();
-                    log.trace("getting value...");
+                    log.trace("Getting value...");
                     String readValue = localJedis.get(key + String.valueOf(j));
-                    log.trace("got value");
-//                    log.info("array length: {}", readValue);
+                    log.trace("Got value");
                     localPool.returnResource(localJedis);
                     return readValue;
                 }
             });
 
             String readValue = (String) result.get();
-            log.info("value #{}: {}", j, readValue);
+            log.info("Value #{}: {}", j, readValue);
             assertThat(readValue).isEqualTo(originalValue + j);
         }
 
@@ -163,10 +163,9 @@ public class RedisTest {
                 @Override
                 public void run() {
                     Jedis localJedis = localPool.getResource();
-                    log.trace("thread #{}", k);
-                    log.trace("getting value #{}...", k);
+                    log.trace("Getting value with key: {}...", k);
                     String v = localJedis.get(k);
-                    log.trace("get {}:{}", k, v);
+                    log.trace("Got value: {}:{}", k, v);
                     localPool.returnResource(localJedis);
                     resultMap.put(k, v);
                 }
@@ -183,5 +182,17 @@ public class RedisTest {
         localPool.destroy();
         remotePool.destroy();
         proxy.stop();
+    }
+
+    @Test
+    @Ignore("TBD")
+    public void testWithMultipleClientsConcurrentlyAndLargeData() {
+
+    }
+
+    @Test
+    @Ignore("TBD")
+    public void testDelay() {
+
     }
 }
