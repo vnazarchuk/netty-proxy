@@ -255,11 +255,13 @@ public class RedisTest {
         JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         Jedis localJedis = localPool.getResource();
 
-        localJedis.get("key1");
-
-        localPool.returnResource(localJedis);
-        localPool.destroy();
-        proxy.stop();
+        try {
+            localJedis.get("key1");
+        } finally {
+            proxy.stop();
+            localPool.returnResource(localJedis);
+            localPool.destroy();
+        }
     }
 
     @Test(expected = JedisConnectionException.class)
@@ -270,10 +272,12 @@ public class RedisTest {
         Jedis localJedis = localPool.getResource();
         proxy.delay(2000);
 
-        localJedis.get("key1");
-
-        localPool.returnResource(localJedis);
-        localPool.destroy();
-        proxy.stop();
+        try {
+            localJedis.get("key1");
+        } finally {
+            proxy.stop();
+            localPool.returnResource(localJedis);
+            localPool.destroy();
+        }
     }
 }

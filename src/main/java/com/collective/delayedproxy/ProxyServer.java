@@ -13,14 +13,13 @@ import org.slf4j.LoggerFactory;
 public class ProxyServer {
 
     private static final Logger log = LoggerFactory.getLogger(ProxyServer.class);
-    private static final String DELAY_HANDLER_NAME = "delay";
     private final int localPort;
     private final int remotePort;
     private final String remoteHost;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel channel;
-    private int timeout = 0;
+    private long timeout = 0;
 
     public ProxyServer(int localPort, String remoteHost, int remotePort) {
         this.localPort = localPort;
@@ -61,7 +60,7 @@ public class ProxyServer {
         return this;
     }
 
-    public ProxyServer delay(int timeout) {
+    public ProxyServer delay(long timeout) {
         this.timeout = timeout;
         return this;
     }
@@ -72,10 +71,14 @@ public class ProxyServer {
             channel.close().syncUninterruptibly();
             channel = null;
         }
-        if (bossGroup != null)
+        if (bossGroup != null) {
             bossGroup.shutdownGracefully().syncUninterruptibly();
-        if (workerGroup != null)
+            bossGroup = null;
+        }
+        if (workerGroup != null) {
             workerGroup.shutdownGracefully().syncUninterruptibly();
+            workerGroup = null;
+        }
         log.info("Stopped proxy server");
     }
 }

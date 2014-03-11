@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 public class DelayHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(DelayHandler.class);
-    private final int timeout;
+    private final long timeout;
 
-    public DelayHandler(int timeout) {
+    public DelayHandler(long timeout) {
         this.timeout = timeout;
     }
 
