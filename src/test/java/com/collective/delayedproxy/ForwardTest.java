@@ -98,8 +98,13 @@ public class ForwardTest {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).delay(2000).start();
         try {
-            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).build());
-            assertThat(serverTask.get()).isEqualTo(Boolean.TRUE);
+            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).read("read test").build());
+
+            Socket client = new Socket(Config.REMOTE_HOST, Config.LOCAL_PORT);
+            Server.write(client, "read test");
+            client.close();
+
+            assertThat(serverTask.get()).isEqualTo(Boolean.FALSE);
         } finally {
             proxy.stop();
             executor.shutdown();
