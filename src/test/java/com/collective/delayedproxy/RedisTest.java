@@ -8,10 +8,9 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -115,7 +114,7 @@ public class RedisTest {
                 public String call() throws Exception {
                     Jedis localJedis = localPool.getResource();
                     log.trace("getting value...");
-                    String readValue = localJedis.get((key + String.valueOf(j)));
+                    String readValue = localJedis.get(key + String.valueOf(j));
                     log.trace("got value");
 //                    log.info("array length: {}", readValue);
                     localPool.returnResource(localJedis);
@@ -129,6 +128,57 @@ public class RedisTest {
         }
 
         // tear down
+        remotePool.returnResource(remoteJedis);
+        localPool.destroy();
+        remotePool.destroy();
+        proxy.stop();
+    }
+
+    @Test
+    public void testWithMultipleClientsConcurrently() throws Exception {
+
+        // set up
+        JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
+        Jedis remoteJedis = remotePool.getResource();
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
+        final JedisPool localPool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
+        final String key = "key";
+        final String originalValue = "value";
+        int threadCount = 32;
+        Map<String, String> map = new HashMap<String, String>(threadCount);
+        final Map<String, String> resultMap = new ConcurrentHashMap<String, String>(threadCount);
+        for (int i = 0; i < threadCount; i++) {
+            String k = key + i;
+            String v = originalValue + i;
+            map.put(k, v);
+            resultMap.put(k, "");
+            remoteJedis.set(k, v);
+        }
+        assertThat(resultMap).isNotEqualTo(map);
+
+        // run test
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        for (final String k : resultMap.keySet()) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Jedis localJedis = localPool.getResource();
+                    log.trace("thread #{}", k);
+                    log.trace("getting value #{}...", k);
+                    String v = localJedis.get(k);
+                    log.trace("get {}:{}", k, v);
+                    localPool.returnResource(localJedis);
+                    resultMap.put(k, v);
+                }
+            });
+        }
+        executor.awaitTermination(2, TimeUnit.SECONDS);
+
+        // verify
+        assertThat(resultMap).isEqualTo(map);
+
+        // tear down
+        executor.shutdown();
         remotePool.returnResource(remoteJedis);
         localPool.destroy();
         remotePool.destroy();
