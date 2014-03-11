@@ -52,6 +52,7 @@ public class Server implements Callable<Boolean> {
             try {
                 log.trace("accepting socket");
                 Socket client = socket.accept();
+                client.setSoTimeout(1000);
                 if (isRead)
                     read(client, msg);
                 if (isWrite)

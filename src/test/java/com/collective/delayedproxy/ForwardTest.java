@@ -92,4 +92,17 @@ public class ForwardTest {
             executor.shutdown();
         }
     }
+
+    @Test
+    public void testReadFromProxyServerWithDelay() throws Exception {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).delay(2000).start();
+        try {
+            Future serverTask = executor.submit(new Server.Builder(Config.REMOTE_PORT).build());
+            assertThat(serverTask.get()).isEqualTo(Boolean.TRUE);
+        } finally {
+            proxy.stop();
+            executor.shutdown();
+        }
+    }
 }
