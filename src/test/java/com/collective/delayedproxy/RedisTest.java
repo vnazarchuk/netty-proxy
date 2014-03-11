@@ -1,7 +1,7 @@
 package com.collective.delayedproxy;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,24 +20,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class RedisTest {
 
     private static final Logger log = LoggerFactory.getLogger(RedisTest.class);
-    Process redisProcess;
+    static Process redisProcess;
 
-    @Before
-    public void startRedis() {
-        try {
-            log.info("Starting Redis... on port: {}", Config.REMOTE_PORT);
-            redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(Config.REMOTE_PORT)).start();
-            // Redis throws redis.clients.jedis.exceptions.JedisConnectionException: Could not get a resource from the pool
-            // when running many tests all at once
-            Thread.sleep(3000);
+    @BeforeClass
+    public static void startRedis() throws Exception {
+        log.info("Starting Redis on port: {}...", Config.REMOTE_PORT);
+        redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(Config.REMOTE_PORT)).start();
             log.info("Redis started");
-        } catch (Exception e) {
-            log.error("Can't run Redis", e);
-        }
     }
 
-    @After
-    public void stopRedis() {
+    @AfterClass
+    public static void stopRedis() throws Exception {
         log.info("Stopping Redis...");
         redisProcess.destroy();
         log.info("Redis stopped");
@@ -59,9 +52,9 @@ public class RedisTest {
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         log.trace("Created pool");
         Jedis jedis = pool.getResource();
+        proxy.stop();
         pool.returnResource(jedis);
         pool.destroy();
-        proxy.stop();
         assertThat(jedis).isNotNull();
     }
 
@@ -85,11 +78,11 @@ public class RedisTest {
 
         String value = localJedis.get("key1");
 
+        proxy.stop();
         remotePool.returnResource(remoteJedis);
         localPool.returnResource(localJedis);
         remotePool.destroy();
         localPool.destroy();
-        proxy.stop();
 
         assertThat(value).isEqualTo("lorem ipsum...");
     }
@@ -130,10 +123,10 @@ public class RedisTest {
         }
 
         // tear down
+        proxy.stop();
         remotePool.returnResource(remoteJedis);
         localPool.destroy();
         remotePool.destroy();
-        proxy.stop();
     }
 
     @Test
