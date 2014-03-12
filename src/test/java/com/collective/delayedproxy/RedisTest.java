@@ -26,13 +26,14 @@ public class RedisTest {
     public static void startRedis() throws Exception {
         log.info("Starting Redis on port: {}...", Config.REMOTE_PORT);
         redisProcess = new ProcessBuilder("redis-server", "--port", Integer.toString(Config.REMOTE_PORT)).start();
-            log.info("Redis started");
+        log.info("Redis started");
     }
 
     @AfterClass
     public static void stopRedis() throws Exception {
         log.info("Stopping Redis...");
         redisProcess.destroy();
+        Thread.sleep(5000);
         log.info("Redis stopped");
     }
 
@@ -47,7 +48,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testClientOnForwardPort() {
+    public void getClientOnForwardedPort() {
         ProxyServer proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
         JedisPool pool = new JedisPool(Config.REMOTE_HOST, Config.LOCAL_PORT);
         log.trace("Created pool");
@@ -59,7 +60,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testPortForwarding() {
+    public void readOnForwardedPort() {
 
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         log.trace("Pool: {}", remotePool.toString());
@@ -88,7 +89,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testWithMultipleClients() throws Exception {
+    public void readWithMultipleClients() throws Exception {
 
         // set up
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
@@ -130,7 +131,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testWithMultipleClientsConcurrently() throws Exception {
+    public void readWithMultipleClientsConcurrently() throws Exception {
         // set up
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis remoteJedis = remotePool.getResource();
@@ -180,7 +181,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testWithMultipleClientsConcurrentlyAndLargeData() throws Exception {
+    public void readWithMultipleClientsConcurrentlyAndLargeData() throws Exception {
         // set up
         JedisPool remotePool = new JedisPool(Config.REMOTE_HOST, Config.REMOTE_PORT);
         Jedis remoteJedis = remotePool.getResource();

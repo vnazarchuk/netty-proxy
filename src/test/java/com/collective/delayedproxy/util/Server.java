@@ -27,7 +27,6 @@ public class Server implements Callable<Boolean> {
     }
 
     public static void read(Socket socket, String msg) throws IOException {
-        socket.setSoTimeout(4000);
         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         log.trace("reading input stream");
         String readMsg = reader.readLine();
@@ -48,7 +47,6 @@ public class Server implements Callable<Boolean> {
     public Boolean call() {
         try {
             ServerSocket socket = new ServerSocket(port);
-            socket.setSoTimeout(1000);
             try {
                 log.trace("accepting socket");
                 Socket client = socket.accept();

@@ -3,7 +3,9 @@ package com.collective.delayedproxy;
 import com.collective.delayedproxy.channel.DelayHandler;
 import com.collective.delayedproxy.channel.ProxyServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -18,7 +20,6 @@ public class ProxyServer {
     private final String remoteHost;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private Channel channel;
     private long timeout = 0;
 
     public ProxyServer(int localPort, String remoteHost, int remotePort) {
@@ -40,21 +41,19 @@ public class ProxyServer {
         try {
             bossGroup = new NioEventLoopGroup(1);
             workerGroup = new NioEventLoopGroup();
-            ServerBootstrap bootstrap = new ServerBootstrap()
+            new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-//                    .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             socketChannel.pipeline().addLast(new DelayHandler(timeout), new ProxyServerHandler(remoteHost, remotePort));
                         }
                     })
-                    .childOption(ChannelOption.AUTO_READ, false);
-            ChannelFuture future = bootstrap.bind(localPort).sync();
-            channel = future.channel();
+                    .childOption(ChannelOption.AUTO_READ, false)
+                    .bind(localPort).sync();
         } catch (InterruptedException e) {
-            log.error("Interrupted", e);
+            log.error("Can't start", e);
             stop();
         }
         return this;
@@ -67,10 +66,6 @@ public class ProxyServer {
 
     public void stop() {
         log.info("Stopping proxy server");
-        if (channel != null) {
-            channel.close().syncUninterruptibly();
-            channel = null;
-        }
         if (bossGroup != null) {
             bossGroup.shutdownGracefully().syncUninterruptibly();
             bossGroup = null;

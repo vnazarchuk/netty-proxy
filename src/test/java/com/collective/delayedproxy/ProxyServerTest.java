@@ -9,28 +9,28 @@ import java.net.Socket;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DelayedProxyTest {
+public class ProxyServerTest {
 
     ProxyServer proxy;
 
     @Before
-    public void startProxy() {
+    public void start() {
         proxy = new ProxyServer(Config.LOCAL_PORT, Config.REMOTE_HOST, Config.REMOTE_PORT).start();
     }
 
     @After
-    public void stopProxy() {
+    public void stop() {
         proxy.stop();
     }
 
     @Test
-    public void testProxyInit() {
+    public void init() {
         assertThat(proxy.getRemotePort()).isEqualTo(Config.REMOTE_PORT);
         assertThat(proxy.getLocalPort()).isEqualTo(Config.LOCAL_PORT);
     }
 
     @Test
-    public void testProxyShutdownAndStart() {
+    public void shutdownAndStart() {
         proxy.stop();
         assertThat(isSocketConnected()).isFalse();
         proxy.start();
@@ -38,7 +38,7 @@ public class DelayedProxyTest {
     }
 
     @Test
-    public void testProxyRunning() {
+    public void isRunning() {
         assertThat(isSocketConnected()).isTrue();
     }
 
